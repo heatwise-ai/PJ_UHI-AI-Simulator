@@ -1,0 +1,11 @@
+*.zip
+heatwise/frontend/node_modules/
+heatwise/frontend/dist/
+uhi-simulator-main/src/
+uhi-simulator-main/
+__pycache__/
+*.pyc
+.DS_Store
+node_modules/
+venv/
+.env
