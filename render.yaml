@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: uhi-simulator
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: GEMINI_API_KEY
+        value: ""   # 선택 사항: Gemini 사용 시 Render 대시보드에서 설정
+    healthCheckPath: /
