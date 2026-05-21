@@ -41,6 +41,7 @@ POLICY_METHODS: dict[str, str] = {
 }
 
 _gemini_model = None
+_claude_client = None
 
 
 def _init_gemini():
@@ -60,6 +61,22 @@ def _init_gemini():
     return _gemini_model
 
 
+def _init_claude():
+    global _claude_client
+    if _claude_client is not None:
+        return _claude_client
+    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    if not api_key:
+        return None
+    try:
+        import anthropic
+        _claude_client = anthropic.Anthropic(api_key=api_key)
+        logger.info("[insight] Claude(Anthropic) 초기화 완료")
+    except Exception as e:
+        logger.warning(f"[insight] Claude 초기화 실패: {e}")
+    return _claude_client
+
+
 def generate_insight(
     delta_T: float,
     adjusted_features: dict[str, float],
@@ -67,13 +84,27 @@ def generate_insight(
     month: int = 0,
     background: dict | None = None,
 ) -> dict:
-    """summary / caution / outlook 3종 텍스트 반환."""
+    """summary / caution / outlook 3종 텍스트 반환. ai_generated 플래그 포함."""
     model = _init_gemini()
     if model:
         result = _gemini_insight(model, delta_T, adjusted_features, adm_nm, month, background)
         if result:
+            result["ai_generated"] = True
+            result["ai_provider"] = "gemini"
             return result
-    return _rule_based_insight(delta_T, adjusted_features, adm_nm, month)
+
+    client = _init_claude()
+    if client:
+        result = _claude_insight(client, delta_T, adjusted_features, adm_nm, month, background)
+        if result:
+            result["ai_generated"] = True
+            result["ai_provider"] = "claude"
+            return result
+
+    result = _rule_based_insight(delta_T, adjusted_features, adm_nm, month)
+    result["ai_generated"] = False
+    result["ai_provider"] = "rule"
+    return result
 
 
 def generate_cause_summary(shap_top3: list, adm_nm: str = "") -> str:
@@ -81,6 +112,11 @@ def generate_cause_summary(shap_top3: list, adm_nm: str = "") -> str:
     model = _init_gemini()
     if model:
         result = _gemini_cause(model, shap_top3, adm_nm)
+        if result:
+            return result
+    client = _init_claude()
+    if client:
+        result = _claude_cause(client, shap_top3, adm_nm)
         if result:
             return result
     return _rule_cause(shap_top3)
@@ -152,6 +188,83 @@ def _gemini_cause(model, shap_top3: list, adm_nm: str) -> str:
         return response.text.strip().strip('"').strip("'")
     except Exception as e:
         logger.warning(f"[insight] Gemini 원인 요약 실패: {e}")
+        return None
+
+
+def _claude_insight(client, delta_T, features, adm_nm, month, background):
+    feat_lines = []
+    for label, val in features.items():
+        disp   = FEATURE_LABELS.get(label, label)
+        method = POLICY_METHODS.get(label, "관련 정책")
+        feat_lines.append(f"  - {disp}({method}): {val:+.4f}")
+
+    bg_str = ""
+    if background:
+        bg_str = (
+            f"\n배경 조건: 기온 {background.get('avg_temp', 'N/A')}°C, "
+            f"계절 {background.get('season', '')}, {background.get('year', '')}년"
+        )
+
+    prompt = f"""서울시 열환경 시뮬레이터 정책 효과 분석 결과입니다.
+
+행정동: {adm_nm or '(미지정)'}
+조정 월: {month}월
+예상 ΔT: {delta_T:+.2f}°C
+조정 정책 변수:{bg_str}
+{chr(10).join(feat_lines)}
+
+서울시 담당 공무원을 위한 실무 인사이트를 한국어로 작성해주세요.
+두괄식 서술, 구체적 수치·정책명 포함, 간결하게 작성합니다.
+
+다음 JSON 형식으로만 응답해주세요 (JSON 외 텍스트 금지):
+{{
+  "summary": "핵심 요약 2문장. 정책명과 구체 수치 포함.",
+  "caution": "주의요망 2-3문장. 모델 한계·면적 특징·극단값 경고 포함.",
+  "outlook": "전망 2문장. 단기(즉시~1년)와 중장기(3년 이상) 구분."
+}}"""
+
+    try:
+        message = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=1024,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        text = message.content[0].text.strip()
+        if "```" in text:
+            text = text.split("```")[1]
+            if text.startswith("json"):
+                text = text[4:]
+        return json.loads(text.strip())
+    except Exception as e:
+        logger.warning(f"[insight] Claude 인사이트 실패: {e}")
+        return None
+
+
+def _claude_cause(client, shap_top3: list, adm_nm: str) -> str:
+    if not shap_top3:
+        return ""
+    lines = []
+    for i, s in enumerate(shap_top3[:3], 1):
+        feat = FEATURE_LABELS.get(s.get("feature", ""), s.get("feature", ""))
+        val  = s.get("shap_value", 0)
+        lines.append(f"  {i}위: {feat} ({val:+.2f}°C)")
+
+    prompt = f"""서울시 행정동 '{adm_nm or ''}' LST(지표면온도) SHAP 분석 결과:
+{chr(10).join(lines)}
+
+위 결과를 바탕으로 이 지역의 열섬 원인을 짧고 명확한 한 문장으로 요약해주세요.
+(예: "건물 밀집과 낮은 반사율이 주요 원인이며, 녹지가 일부 완화 중")
+문장만 반환하세요. 따옴표나 마침표 없이."""
+
+    try:
+        message = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=256,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        return message.content[0].text.strip().strip('"').strip("'")
+    except Exception as e:
+        logger.warning(f"[insight] Claude 원인 요약 실패: {e}")
         return None
 
 

@@ -18,10 +18,13 @@ const PACKAGE_OPTIONS = [
   { value: '폭염저감', label: '폭염 저감' },
 ]
 
+const AREA_PACKAGES = new Set(['전체', '녹지', '건축포장'])
+
 function OptimalCombinationModal({ open, features, selectedDong, year, month, projectArea, onClose, onApply }) {
   const [budget, setBudget] = useState(50_000_000)
   const [budgetInput, setBudgetInput] = useState('')
   const [pkg, setPkg] = useState('전체')
+  const [areaInput, setAreaInput] = useState('')
   const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -32,8 +35,14 @@ function OptimalCombinationModal({ open, features, selectedDong, year, month, pr
       setResult(null)
       setError(null)
       setBudgetInput('')
+      setAreaInput(projectArea > 0 ? String(projectArea) : '')
     }
-  }, [open])
+  }, [open, projectArea])
+
+  const showAreaInput = AREA_PACKAGES.has(pkg)
+  const resolvedArea = parseFloat(areaInput) > 0
+    ? parseFloat(areaInput)
+    : projectArea > 0 ? projectArea : 10000
 
   const runOptimize = () => {
     if (!selectedDong) return
@@ -41,15 +50,13 @@ function OptimalCombinationModal({ open, features, selectedDong, year, month, pr
     setResult(null)
     setError(null)
 
-    const dong_area = projectArea > 0 ? projectArea : undefined
-
     api.optimize({
       adm_cd: selectedDong,
       year: year || 2024,
       month: month || 8,
       budget,
       package: pkg,
-      dong_area_m2: dong_area,
+      dong_area_m2: showAreaInput ? resolvedArea : undefined,
     })
       .then((res) => {
         setResult(res)
@@ -145,6 +152,23 @@ function OptimalCombinationModal({ open, features, selectedDong, year, month, pr
               ))}
             </div>
           </div>
+
+          {showAreaInput && (
+            <div className="modal-input-group">
+              <div className="modal-input-label">사업 시행 면적 (녹지·반사율 비용 계산용)</div>
+              <div className="modal-budget-input-row">
+                <input
+                  type="number"
+                  className="modal-budget-input"
+                  placeholder={`미입력 시 ${(resolvedArea).toLocaleString()}㎡ 기본 적용`}
+                  value={areaInput}
+                  onChange={(e) => setAreaInput(e.target.value.replace(/[^0-9]/g, ''))}
+                  min="0"
+                />
+                <span className="modal-budget-unit">㎡</span>
+              </div>
+            </div>
+          )}
 
           <button
             className="modal-run-btn"

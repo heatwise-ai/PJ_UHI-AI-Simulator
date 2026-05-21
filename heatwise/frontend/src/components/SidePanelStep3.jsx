@@ -141,14 +141,18 @@ function SidePanelStep3({ selectedDong, features, adjustments, projectArea, year
       {/* 2. 인사이트 */}
       {insightLoading && (
         <div className="insight-box">
-          <div className="insight-tag">정책 완화 인사이트 [AI 생성]</div>
+          <div className="insight-tag">정책 완화 인사이트 [AI 분석 중...]</div>
           <p className="insight-text" style={{ color: '#888' }}>분석 중...</p>
         </div>
       )}
 
       {!insightLoading && insight && (
         <div className="insight-box">
-          <div className="insight-tag">정책 완화 인사이트 [AI 생성]</div>
+          <div className="insight-tag">
+            정책 완화 인사이트 [{insight.ai_generated
+              ? (insight.ai_provider === 'claude' ? 'AI(Claude) 생성' : 'AI(Gemini) 생성')
+              : '자동 요약'}]
+          </div>
           <p className="insight-text">{insight.summary}</p>
           {adjustedKeys.length > 0 && (
             <InsightLinks adjustedKeys={adjustedKeys} />
@@ -264,7 +268,7 @@ function InsightBox({ deltaLST, adjustedKeys, dongName }) {
 
   return (
     <div className="insight-box">
-      <div className="insight-tag">정책 완화 인사이트 [AI 생성]</div>
+      <div className="insight-tag">정책 완화 인사이트 [자동 요약]</div>
       <p className="insight-text">{message}</p>
       {adjustedKeys.length > 0 && <InsightLinks adjustedKeys={adjustedKeys} />}
     </div>

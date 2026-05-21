@@ -42,6 +42,12 @@ function SidePanelStep1({ selectedDong, year, month, lstByDong, dongInfo, dongsB
   const rank = dongsInGu.indexOf(selectedDong) + 1
   const totalInGu = dongsInGu.length
 
+  const allDongs = Object.keys(lstByDong)
+    .filter((d) => lstByDong[d] != null)
+    .sort((a, b) => lstByDong[b] - lstByDong[a])
+  const seoulRank = allDongs.indexOf(selectedDong) + 1
+  const seoulTotal = allDongs.length
+
   return (
     <div className="step1">
       <div className="step1-header">
@@ -60,6 +66,13 @@ function SidePanelStep1({ selectedDong, year, month, lstByDong, dongInfo, dongsB
           <div className="stat-cell-label">서울 평균</div>
           <div className="stat-cell-value">
             {seoulAvg != null ? `${seoulAvg.toFixed(1)}°C` : '-'}
+          </div>
+        </div>
+        <div className="stat-cell">
+          <div className="stat-cell-label">서울 내</div>
+          <div className="stat-cell-value">
+            {seoulRank > 0 ? `${seoulRank}위` : '-'}
+            {seoulTotal > 0 && <span className="rank-suffix">/ {seoulTotal}</span>}
           </div>
         </div>
         <div className="stat-cell">

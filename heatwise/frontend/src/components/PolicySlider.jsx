@@ -59,11 +59,6 @@ function PolicySlider({ variable, currentValue, adjustedValue, onChange }) {
 
       <div className="slider-track-wrap">
         <div className="slider-color-track" style={{ background: trackGradient }} />
-        <div
-          className="slider-baseline-marker"
-          style={{ left: `${basePct}%` }}
-          title={`현재값: ${formatValue(baseline)}${unitStr}`}
-        />
         {changed && (
           <div className="slider-thumb-label" style={{ left: `${thumbPct}%` }}>
             {formatValue(value)}

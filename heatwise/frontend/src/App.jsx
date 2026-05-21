@@ -72,7 +72,7 @@ function App() {
 
       {!panelOpen && (
         <button className="panel-reopen" onClick={() => setPanelOpen(true)}>
-          ◀
+          ▶
         </button>
       )}
 

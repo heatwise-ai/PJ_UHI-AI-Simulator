@@ -38,6 +38,8 @@ class InsightResponse(BaseModel):
     summary: str = Field(description="핵심 인사이트 요약 (1~2문장)")
     caution: str = Field(description="주의요망 사항")
     outlook: str = Field(description="중장기 전망")
+    ai_generated: bool = Field(default=False, description="AI(LLM) 사용 여부")
+    ai_provider: str = Field(default="rule", description="사용된 AI 제공자 (gemini/claude/rule)")
 
 
 @router.post("/insight", response_model=InsightResponse)
