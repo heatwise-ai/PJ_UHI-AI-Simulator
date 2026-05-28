@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { POLICY_VARIABLES } from '../utils/policyMeta'
 import { api } from '../api'
+import BudgetScenarioModal from './BudgetScenarioModal'
 
 const RELATED_LINKS = {
   Albedo: { label: '쿨루프 보급사업', url: 'https://www.seoul.go.kr/' },
@@ -15,6 +16,7 @@ function SidePanelStep3({ selectedDong, features, adjustments, projectArea, year
   const [insight, setInsight] = useState(null)
   const [insightLoading, setInsightLoading] = useState(false)
   const [perVarDeltas, setPerVarDeltas] = useState({})
+  const [budgetModalOpen, setBudgetModalOpen] = useState(false)
 
   const baseLST = features?.LST
   const dongName = dongInfo?.[selectedDong]?.dongName || ''
@@ -102,11 +104,14 @@ function SidePanelStep3({ selectedDong, features, adjustments, projectArea, year
       const variable = POLICY_VARIABLES.find((v) => v.key === key)
       if (!variable) return null
       const delta = adjustments[key] - (features[key] || 0)
+      const { cost: costNum, needsArea } = calcCostNum(variable, delta, projectArea)
       return {
         key,
         label: variable.label,
         relatedPolicy: variable.relatedPolicy || '—',
-        cost: estimateCost(variable, delta, projectArea),
+        cost: needsArea ? '면적 미입력' : formatCostStr(costNum),
+        costNum,
+        needsArea,
         difficulty: estimateDifficulty(variable.package),
         deltaLST: perVarDeltas[key],
       }
@@ -228,10 +233,17 @@ function SidePanelStep3({ selectedDong, features, adjustments, projectArea, year
         <button className="action-btn" onClick={() => alert('시트 내보내기 (구현 예정)')}>
           시트 내보내기
         </button>
-        <button className="action-btn" onClick={() => alert('사업비 삽입 (구현 예정)')}>
-          사업비 삽입
+        <button className="action-btn action-btn-primary" onClick={() => setBudgetModalOpen(true)}>
+          💰 사업비 시나리오
         </button>
       </div>
+
+      <BudgetScenarioModal
+        open={budgetModalOpen}
+        onClose={() => setBudgetModalOpen(false)}
+        tableRows={tableRows}
+        deltaLST={deltaLST}
+      />
 
       {/* 5. 주의요망 */}
       <Disclosure title="주의요망">
@@ -314,24 +326,26 @@ function Disclosure({ title, children }) {
   )
 }
 
-function estimateCost(variable, delta, projectArea) {
-  if (delta === 0) return '-'
-
-  let totalCost = 0
-
+function calcCostNum(variable, delta, projectArea) {
+  if (!delta || delta === 0) return { cost: 0, needsArea: false }
   if (variable.appliesToArea && variable.costPerArea != null) {
-    if (!projectArea || projectArea <= 0) return '면적 미입력'
+    if (!projectArea || projectArea <= 0) return { cost: 0, needsArea: true }
     const intensity = Math.abs(delta / (variable.recommendedUpper || 1))
-    totalCost = projectArea * variable.costPerArea * Math.max(0.5, Math.min(2, intensity))
-  } else if (variable.costPerStep != null) {
-    const stepCount = Math.abs(delta / variable.step)
-    totalCost = stepCount * variable.costPerStep
+    const cost = projectArea * variable.costPerArea * Math.max(0.5, Math.min(2, intensity))
+    return { cost: Math.round(cost), needsArea: false }
   }
+  if (variable.costPerStep != null) {
+    const stepCount = Math.abs(delta / variable.step)
+    return { cost: Math.round(stepCount * variable.costPerStep), needsArea: false }
+  }
+  return { cost: 0, needsArea: false }
+}
 
-  if (totalCost === 0) return '-'
-  if (totalCost < 1e8) return `${(totalCost / 1e6).toFixed(0)}백만`
-  if (totalCost < 1e12) return `${(totalCost / 1e8).toFixed(1)}억`
-  return `${(totalCost / 1e12).toFixed(1)}조`
+function formatCostStr(cost) {
+  if (!cost || cost === 0) return '-'
+  if (cost < 1e8) return `${(cost / 1e6).toFixed(0)}백만`
+  if (cost < 1e12) return `${(cost / 1e8).toFixed(1)}억`
+  return `${(cost / 1e12).toFixed(1)}조`
 }
 
 function estimateDifficulty(packageId) {
