@@ -1193,3 +1193,300 @@ input[type="number"] {
 .budget-breakdown-sub { padding-left: 10px; }
 .budget-breakdown-sub .breakdown-label { color: #64748b; font-size: 12px; }
 .budget-breakdown-sub .breakdown-cost { font-size: 12px; }
+
+/* ============================================ */
+/*  시트 내보내기 / A4 리포트 모달               */
+/* ============================================ */
+
+/* 모달 배경 */
+.export-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.75);
+  overflow-y: auto;
+  z-index: 2000;
+  padding: 24px 16px 60px;
+}
+
+/* 내부 래퍼 */
+.export-wrapper {
+  max-width: 860px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+/* 컨트롤 바 */
+.export-controls {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #1e293b;
+  border-radius: 10px;
+  padding: 12px 18px;
+  position: sticky;
+  top: 8px;
+  z-index: 10;
+}
+.export-hint { font-size: 12px; color: #94a3b8; }
+.export-btns { display: flex; gap: 8px; }
+.export-btn-pdf {
+  padding: 8px 18px;
+  background: #1976d2;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+.export-btn-pdf:hover { background: #1565c0; }
+.export-btn-close {
+  padding: 8px 14px;
+  background: transparent;
+  color: #94a3b8;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.export-btn-close:hover { background: #334155; color: white; }
+
+/* A4 페이지 */
+.export-page {
+  width: 794px;
+  min-height: 1123px;
+  background: white;
+  padding: 52px 60px 48px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+  border-radius: 2px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  font-family: 'Pretendard', -apple-system, system-ui, sans-serif;
+  color: #0f172a;
+}
+
+/* 페이지 헤더 */
+.rpt-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-bottom: 14px;
+  border-bottom: 2px solid #1976d2;
+  margin-bottom: 20px;
+}
+.rpt-logo { font-size: 16px; font-weight: 800; color: #0f172a; }
+.rpt-subtitle-sm { font-size: 11px; color: #64748b; margin-top: 3px; }
+.rpt-meta-right { text-align: right; font-size: 11px; color: #64748b; }
+.rpt-page-label { font-weight: 700; color: #475569; margin-top: 3px; }
+
+/* 제목 */
+.rpt-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 4px;
+}
+.rpt-subtitle-main {
+  font-size: 13px;
+  color: #64748b;
+  margin-bottom: 22px;
+}
+
+/* 섹션 */
+.rpt-section { margin-bottom: 22px; }
+.rpt-section-title {
+  font-size: 12px;
+  font-weight: 800;
+  color: #1976d2;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.rpt-ai-badge {
+  font-size: 10px;
+  background: #dbeafe;
+  color: #1d4ed8;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* 조건 그리드 */
+.rpt-cond-row {
+  display: flex;
+  gap: 0;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.rpt-cond-cell {
+  flex: 1;
+  padding: 10px 14px;
+  border-right: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+.rpt-cond-cell:last-child { border-right: none; }
+.rpt-cond-label { font-size: 10px; color: #64748b; font-weight: 600; margin-bottom: 4px; }
+.rpt-cond-value { font-size: 14px; font-weight: 700; color: #0f172a; }
+.rpt-cond-value.cool { color: #1976d2; }
+
+/* 핵심 결과 */
+.rpt-result-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f8fafc;
+  border-radius: 10px;
+  padding: 16px 20px;
+  border: 1px solid #e2e8f0;
+}
+.rpt-result-cell { flex: 1; text-align: center; }
+.rpt-result-label { font-size: 11px; color: #64748b; font-weight: 600; margin-bottom: 6px; }
+.rpt-result-val { font-size: 24px; font-weight: 800; color: #0f172a; }
+.rpt-result-val.rpt-delta.cool { color: #1976d2; }
+.rpt-result-val.rpt-delta.warm { color: #d32f2f; }
+.rpt-result-val.rpt-small { font-size: 14px; color: #64748b; }
+.rpt-result-arrow { font-size: 20px; color: #94a3b8; font-weight: 300; flex-shrink: 0; }
+
+/* 변수 테이블 */
+.rpt-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.rpt-table th {
+  background: #0f172a;
+  color: white;
+  padding: 8px 10px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+}
+.rpt-table th:first-child { border-radius: 6px 0 0 0; }
+.rpt-table th:last-child { border-radius: 0 6px 0 0; }
+.rpt-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #374151;
+}
+.rpt-table tbody tr:hover { background: #f8fafc; }
+.rpt-table tbody tr:last-child td { border-bottom: none; }
+.rpt-td-bold { font-weight: 600; color: #0f172a; }
+.rpt-td-num { text-align: right; font-variant-numeric: tabular-nums; }
+.rpt-table td.cool { color: #1976d2; font-weight: 700; }
+.rpt-table td.warm { color: #d32f2f; font-weight: 700; }
+
+/* 인사이트 박스 */
+.rpt-insight-box {
+  background: #eff6ff;
+  border-left: 4px solid #1976d2;
+  border-radius: 0 8px 8px 0;
+  padding: 14px 16px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #1e40af;
+}
+
+/* 텍스트 */
+.rpt-text {
+  font-size: 13px;
+  line-height: 1.75;
+  color: #374151;
+}
+.rpt-caution {
+  font-size: 12px;
+  line-height: 1.7;
+  color: #64748b;
+  background: #fafafa;
+  padding: 12px 14px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+
+/* 순위 */
+.rpt-ranking { display: flex; flex-direction: column; gap: 8px; }
+.rpt-rank-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+.rpt-rank-badge {
+  min-width: 50px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 800;
+  text-align: center;
+}
+.rpt-rank-1 { background: #fef3c7; color: #92400e; }
+.rpt-rank-2 { background: #e0f2fe; color: #075985; }
+.rpt-rank-3 { background: #f0fdf4; color: #166534; }
+.rpt-rank-name { font-size: 13px; font-weight: 700; color: #0f172a; }
+.rpt-rank-detail { font-size: 11px; color: #64748b; margin-top: 2px; }
+
+/* 푸터 */
+.rpt-footer {
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: #94a3b8;
+}
+.rpt-empty {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 13px;
+  padding: 30px 0;
+}
+
+/* ============================================ */
+/*  @media print  (PDF 출력 전용)               */
+/* ============================================ */
+@media print {
+  @page { size: A4; margin: 12mm; }
+
+  body * { visibility: hidden; }
+  #export-print-area,
+  #export-print-area * { visibility: visible; }
+
+  #export-print-area {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+  }
+
+  .export-controls { display: none !important; }
+  .export-backdrop { background: none !important; }
+
+  .export-page {
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    width: 100% !important;
+    min-height: auto !important;
+    padding: 0 !important;
+    page-break-after: always;
+    page-break-inside: avoid;
+  }
+  .export-page:last-child { page-break-after: auto; }
+}

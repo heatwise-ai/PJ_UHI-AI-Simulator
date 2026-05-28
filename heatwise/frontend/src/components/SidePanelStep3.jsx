@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { POLICY_VARIABLES } from '../utils/policyMeta'
 import { api } from '../api'
 import BudgetScenarioModal from './BudgetScenarioModal'
+import ExportReportModal from './ExportReportModal'
 
 const RELATED_LINKS = {
   Albedo: { label: '쿨루프 보급사업', url: 'https://www.seoul.go.kr/' },
@@ -17,6 +18,7 @@ function SidePanelStep3({ selectedDong, features, adjustments, projectArea, year
   const [insightLoading, setInsightLoading] = useState(false)
   const [perVarDeltas, setPerVarDeltas] = useState({})
   const [budgetModalOpen, setBudgetModalOpen] = useState(false)
+  const [exportOpen, setExportOpen] = useState(false)
 
   const baseLST = features?.LST
   const dongName = dongInfo?.[selectedDong]?.dongName || ''
@@ -103,12 +105,21 @@ function SidePanelStep3({ selectedDong, features, adjustments, projectArea, year
     .map((key) => {
       const variable = POLICY_VARIABLES.find((v) => v.key === key)
       if (!variable) return null
-      const delta = adjustments[key] - (features[key] || 0)
+      const curVal = features[key] ?? 0
+      const adjVal = adjustments[key] ?? curVal
+      const delta = adjVal - curVal
       const { cost: costNum, needsArea } = calcCostNum(variable, delta, projectArea)
+      const fmtV = (v) => {
+        if (v == null) return '—'
+        const n = variable.step >= 1 ? Math.round(v).toLocaleString() : v.toFixed(3)
+        return n + (variable.unit ? ` ${variable.unit}` : '')
+      }
       return {
         key,
         label: variable.label,
         relatedPolicy: variable.relatedPolicy || '—',
+        baseline: fmtV(curVal),
+        adjusted: fmtV(adjVal),
         cost: needsArea ? '면적 미입력' : formatCostStr(costNum),
         costNum,
         needsArea,
@@ -230,8 +241,8 @@ function SidePanelStep3({ selectedDong, features, adjustments, projectArea, year
 
       {/* 4. 액션 버튼 */}
       <div className="action-row">
-        <button className="action-btn" onClick={() => alert('시트 내보내기 (구현 예정)')}>
-          시트 내보내기
+        <button className="action-btn" onClick={() => setExportOpen(true)}>
+          📄 시트 내보내기
         </button>
         <button className="action-btn action-btn-primary" onClick={() => setBudgetModalOpen(true)}>
           💰 사업비 시나리오
@@ -245,6 +256,20 @@ function SidePanelStep3({ selectedDong, features, adjustments, projectArea, year
         adjustments={adjustments}
         projectArea={projectArea}
         deltaLST={deltaLST}
+      />
+
+      <ExportReportModal
+        open={exportOpen}
+        onClose={() => setExportOpen(false)}
+        dongName={dongName}
+        year={year}
+        month={month}
+        beforeLST={simResult?.before_lst ?? baseLST}
+        afterLST={simResult?.after_lst ?? baseLST}
+        deltaLST={deltaLST}
+        tableRows={tableRows}
+        insight={insight}
+        totalCost={tableRows.reduce((s, r) => s + (r.costNum || 0), 0)}
       />
 
       {/* 5. 주의요망 */}
