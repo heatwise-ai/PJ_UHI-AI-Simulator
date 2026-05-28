@@ -257,7 +257,7 @@ def _format_result(adm_cd, year, month, package, budget, result, policy_info, un
     for label in pkg_labels:
         delta = opt_deltas.get(label, 0.0)
         info = policy_info.get(label, {})
-        adjusted = abs(delta) >= 1e-9
+        adjusted = bool(abs(delta) >= 1e-9)
         cost = _calc_cost(label, delta, unit_cost, row) if adjusted else 0
 
         if info:

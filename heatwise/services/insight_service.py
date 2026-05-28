@@ -313,15 +313,15 @@ def _build_summary(delta_T: float, features: dict, adm_nm: str, month: int) -> s
         season_note = " 겨울철에는 효과가 상대적으로 작습니다."
 
     if delta_T < -1.0:
-        effect = f"큰 폭의 LST 저감({delta_T:+.2f}°C)"
+        core = f"큰 폭의 LST 저감({delta_T:+.2f}°C)이 기대됩니다."
     elif delta_T < 0:
-        effect = f"LST {delta_T:+.2f}°C 저감"
+        core = f"LST {delta_T:+.2f}°C 저감이 기대됩니다."
     elif delta_T == 0:
-        effect = "유의한 LST 변화 없음"
+        core = "유의한 LST 변화가 없습니다."
     else:
-        effect = f"LST {delta_T:+.2f}°C 상승이 예상되어 정책 재검토가 필요합니다"
+        core = f"LST {delta_T:+.2f}°C 상승이 예상되어 정책 재검토가 필요합니다."
 
-    return f"{loc}{policy_desc}을 통해 {effect}이 기대됩니다.{season_note}"
+    return f"{loc}{policy_desc}을 통해 {core}{season_note}"
 
 
 def _build_caution(features: dict) -> str:
