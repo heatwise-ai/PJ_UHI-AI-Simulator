@@ -241,7 +241,9 @@ function SidePanelStep3({ selectedDong, features, adjustments, projectArea, year
       <BudgetScenarioModal
         open={budgetModalOpen}
         onClose={() => setBudgetModalOpen(false)}
-        tableRows={tableRows}
+        features={features}
+        adjustments={adjustments}
+        projectArea={projectArea}
         deltaLST={deltaLST}
       />
 
