@@ -11,7 +11,7 @@ const RELATED_LINKS = {
   '그늘막 개수': { label: '폭염 그늘막 설치사업', url: 'https://news.seoul.go.kr/' },
 }
 
-function SidePanelStep3({ selectedDong, features, adjustments, projectArea, year, month, dongInfo }) {
+function SidePanelStep3({ selectedDong, features, adjustments, projectArea, year, month, dongInfo, onAdjust }) {
   const [simResult, setSimResult] = useState(null)
   const [simLoading, setSimLoading] = useState(false)
   const [insight, setInsight] = useState(null)
@@ -252,6 +252,10 @@ function SidePanelStep3({ selectedDong, features, adjustments, projectArea, year
       <BudgetScenarioModal
         open={budgetModalOpen}
         onClose={() => setBudgetModalOpen(false)}
+        onApply={(newAdj) => {
+          Object.entries(newAdj).forEach(([key, value]) => onAdjust?.(key, value))
+          setBudgetModalOpen(false)
+        }}
         features={features}
         adjustments={adjustments}
         projectArea={projectArea}

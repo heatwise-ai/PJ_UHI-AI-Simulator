@@ -142,6 +142,7 @@ function App() {
                   year={year}
                   month={month}
                   dongInfo={dongInfo}
+                  onAdjust={updateAdjustment}
                 />
               )}
 

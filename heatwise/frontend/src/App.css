@@ -845,8 +845,10 @@ input[type="number"] {
   to { opacity: 1; }
 }
 
-.empty-icon { font-size: 44px; margin-bottom: 14px; opacity: 0.65; }
-.empty-title { font-size: 16px; font-weight: 600; color: #333; margin-bottom: 6px; }
+.empty-hero-title { margin-bottom: 20px; }
+.empty-hero-sub { font-size: 12px; color: #6b7280; margin-bottom: 5px; line-height: 1.5; }
+.empty-hero-main { font-size: 17px; font-weight: 700; color: #1e3a5f; line-height: 1.4; letter-spacing: -0.3px; }
+.empty-title { font-size: 14px; font-weight: 500; color: #555; margin-bottom: 6px; }
 .empty-desc { font-size: 13px; color: #888; line-height: 1.6; margin-bottom: 24px; }
 
 .empty-tips { text-align: left; background: #f8f9fa; border-radius: 8px; padding: 14px 16px; font-size: 12px; color: #555; }

@@ -22,7 +22,7 @@ function formatCostShort(cost) {
   return `${(cost / 1e8).toFixed(1)}억원`
 }
 
-export default function BudgetScenarioModal({ open, onClose, features, adjustments, projectArea, deltaLST }) {
+export default function BudgetScenarioModal({ open, onClose, onApply, features, adjustments, projectArea, deltaLST }) {
   const [budgetRaw, setBudgetRaw] = useState('')
   const [activePackage, setActivePackage] = useState('green')
   const [localAdj, setLocalAdj] = useState({})
@@ -64,6 +64,19 @@ export default function BudgetScenarioModal({ open, onClose, features, adjustmen
   const usagePct = budget > 0 ? (totalCost / budget) * 100 : 0
   const barPct = Math.min(usagePct, 100)
   const barClass = overBudget ? 'over' : usagePct > 80 ? 'warning' : 'ok'
+
+  const handleApply = () => {
+    const result = {}
+    POLICY_VARIABLES.forEach((v) => {
+      const base = features?.[v.key]
+      const val = localAdj[v.key]
+      if (val != null && base != null && Math.abs(val - base) > v.step * 0.01) {
+        result[v.key] = val
+      }
+    })
+    onApply?.(result)
+    onClose()
+  }
 
   const handleBudgetChange = (e) => {
     const raw = e.target.value.replace(/[^0-9]/g, '')
@@ -236,6 +249,7 @@ export default function BudgetScenarioModal({ open, onClose, features, adjustmen
 
         <div className="modal-footer">
           <button className="modal-btn modal-btn-secondary" onClick={onClose}>닫기</button>
+          <button className="modal-btn modal-btn-primary" onClick={handleApply}>이 정책 적용하기</button>
         </div>
       </div>
     </div>,
