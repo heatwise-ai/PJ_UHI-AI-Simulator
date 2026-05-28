@@ -20,7 +20,7 @@ const PACKAGE_OPTIONS = [
 
 const AREA_PACKAGES = new Set(['전체', '녹지', '건축포장'])
 
-function OptimalCombinationModal({ open, features, selectedDong, year, month, projectArea, onClose, onApply }) {
+function OptimalCombinationModal({ open, features, selectedDong, year, month, projectArea, onClose, onApply, onAreaChange }) {
   const [budget, setBudget] = useState(50_000_000)
   const [budgetInput, setBudgetInput] = useState('')
   const [pkg, setPkg] = useState('전체')
@@ -86,10 +86,13 @@ function OptimalCombinationModal({ open, features, selectedDong, year, month, pr
   const handleApply = () => {
     if (!result?.recommended) return
     const finalAdjustments = {}
-    result.recommended.forEach((r) => {
+    result.recommended.filter((r) => r.adjusted).forEach((r) => {
       finalAdjustments[r.feature_col] = r.recommended_value
     })
     onApply(finalAdjustments)
+    if (onAreaChange && parseFloat(areaInput) > 0) {
+      onAreaChange(parseFloat(areaInput))
+    }
     onClose()
   }
 
@@ -205,7 +208,7 @@ function OptimalCombinationModal({ open, features, selectedDong, year, month, pr
               </div>
             </div>
 
-            {result.recommended?.length === 0 ? (
+            {result.recommended?.filter((r) => r.adjusted).length === 0 ? (
               <div className="modal-empty">
                 <p>예산 내 추천 조합을 찾지 못했습니다.</p>
                 <p className="empty-sub">예산을 늘리거나 패키지를 변경해 보세요.</p>
@@ -213,27 +216,41 @@ function OptimalCombinationModal({ open, features, selectedDong, year, month, pr
             ) : (
               <div className="modal-steps">
                 <div className="modal-steps-title">추천 변수 조정</div>
-                {result.recommended.map((r, i) => (
-                  <div key={r.feature_col} className="modal-step">
-                    <div className="step-number">{i + 1}</div>
-                    <div className="step-content">
-                      <div className="step-row">
-                        <span className="step-name">{r.feature_label}</span>
-                        <span className="step-impact">
-                          {r.delta > 0 ? '+' : ''}{r.delta.toFixed ? r.delta.toFixed(2) : r.delta}
-                        </span>
+                {(() => {
+                  let counter = 0
+                  return result.recommended.map((r) => {
+                    const num = r.adjusted ? ++counter : '—'
+                    return (
+                      <div
+                        key={r.feature_col}
+                        className="modal-step"
+                        style={!r.adjusted ? { opacity: 0.4 } : {}}
+                      >
+                        <div className="step-number">{num}</div>
+                        <div className="step-content">
+                          <div className="step-row">
+                            <span className="step-name">{r.feature_label}</span>
+                            <span className="step-impact">
+                              {r.adjusted
+                                ? `${r.delta > 0 ? '+' : ''}${r.delta.toFixed ? r.delta.toFixed(2) : r.delta}`
+                                : '현행 유지'}
+                            </span>
+                          </div>
+                          {r.adjusted && (
+                            <div className="step-detail">
+                              {r.current_value} → {r.recommended_value}
+                              {r.cost > 0 ? ` · ${r.cost.toLocaleString()}원` : ''}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      <div className="step-detail">
-                        {r.current_value} → {r.recommended_value}
-                        {r.cost > 0 ? ` · ${r.cost.toLocaleString()}원` : ''}
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                    )
+                  })
+                })()}
               </div>
             )}
 
-            {result.recommended?.length > 0 && (
+            {result.recommended?.filter((r) => r.adjusted).length > 0 && (
               <div className="modal-footer">
                 <button className="modal-btn modal-btn-secondary" onClick={onClose}>닫기</button>
                 <button className="modal-btn modal-btn-primary" onClick={handleApply}>

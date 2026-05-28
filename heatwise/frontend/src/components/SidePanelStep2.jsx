@@ -3,15 +3,11 @@ import { PACKAGES, getVariablesByPackage } from '../utils/policyMeta'
 import PolicySlider from './PolicySlider'
 import OptimalCombinationModal from './OptimalCombinationModal'
 
-// Packages with area-based variables (Albedo, 녹지율)
-const AREA_PACKAGES = new Set(['green', 'surface'])
-
 function SidePanelStep2({ selectedDong, year, month, nameToCode, features, sliderBounds, adjustments, onAdjust, projectArea, onProjectAreaChange }) {
   const [activePackage, setActivePackage] = useState('green')
   const [modalOpen, setModalOpen] = useState(false)
 
   const variablesInPackage = getVariablesByPackage(activePackage)
-  const showAreaInput = AREA_PACKAGES.has(activePackage)
 
   // Merge API bounds into variable meta
   const getVariable = (variable) => {
@@ -45,10 +41,6 @@ function SidePanelStep2({ selectedDong, year, month, nameToCode, features, slide
           </button>
         ))}
       </div>
-
-      {showAreaInput && (
-        <ProjectAreaInput value={projectArea} onChange={onProjectAreaChange} />
-      )}
 
       <div className="slider-list">
         {variablesInPackage.length === 0 ? (
@@ -84,6 +76,7 @@ function SidePanelStep2({ selectedDong, year, month, nameToCode, features, slide
             onAdjust(key, value)
           })
         }}
+        onAreaChange={onProjectAreaChange}
       />
     </div>
   )
@@ -106,38 +99,6 @@ function BackgroundConditions({ features, year }) {
   return (
     <div className="bg-conditions-simple">
       배경 조건: {parts.join(' · ')}
-    </div>
-  )
-}
-
-function ProjectAreaInput({ value, onChange }) {
-  const handleChange = (e) => {
-    const v = parseFloat(e.target.value)
-    onChange(isNaN(v) ? null : v)
-  }
-
-  return (
-    <div className="project-area-box">
-      <div className="project-area-header">
-        <div>
-          <div className="project-area-title">사업 시행 면적</div>
-          <div className="project-area-hint">
-            이 동에서 정책을 시행할 면적 (사업비 계산에 사용)
-          </div>
-        </div>
-      </div>
-      <div className="project-area-input-row">
-        <input
-          type="number"
-          className="project-area-input"
-          placeholder="예: 1500"
-          value={value ?? ''}
-          onChange={handleChange}
-          min="0"
-          step="100"
-        />
-        <span className="project-area-unit">㎡</span>
-      </div>
     </div>
   )
 }

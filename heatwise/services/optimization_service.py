@@ -250,19 +250,30 @@ def _greedy_search(adm_cd, year, month, row, policy_info, unit_cost, budget):
 
 
 def _format_result(adm_cd, year, month, package, budget, result, policy_info, unit_cost, row):
+    pkg_labels = ALL_PACKAGES.get(package, ALL_PACKAGES["전체"])
+    opt_deltas = dict(zip(result["labels"], result["best_x"]))
+
     recommended = []
-    for label, delta in zip(result["labels"], result["best_x"]):
-        if abs(delta) < 1e-9:
-            continue
+    for label in pkg_labels:
+        delta = opt_deltas.get(label, 0.0)
         info = policy_info.get(label, {})
-        cost = _calc_cost(label, delta, unit_cost, row)
+        adjusted = abs(delta) >= 1e-9
+        cost = _calc_cost(label, delta, unit_cost, row) if adjusted else 0
+
+        if info:
+            cur = info.get("cur", 0)
+        else:
+            col = VAR_META_MAP.get(label, label)
+            cur = float(row[col]) if col in row.index else 0
+
         recommended.append({
             "feature_label": label,
             "feature_col":   VAR_META_MAP.get(label, label),
-            "current_value": round2(info.get("cur", 0)),
+            "current_value": round2(cur),
             "delta":         round2(delta),
-            "recommended_value": round2(info.get("cur", 0) + delta),
+            "recommended_value": round2(cur + delta),
             "cost":          round(cost),
+            "adjusted":      adjusted,
         })
 
     return {
