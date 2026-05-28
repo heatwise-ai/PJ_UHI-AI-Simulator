@@ -264,7 +264,7 @@ def _format_result(adm_cd, year, month, package, budget, result, policy_info, un
             cur = info.get("cur", 0)
         else:
             col = VAR_META_MAP.get(label, label)
-            cur = float(row[col]) if col in row.index else 0
+            cur = safe_float(row[col]) if col in row.index else 0
 
         recommended.append({
             "feature_label": label,
